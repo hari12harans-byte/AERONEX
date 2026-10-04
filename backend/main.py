@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel, Field
 from pathlib import Path
 import pandas as pd, numpy as np, json, os, math, time, requests
@@ -454,6 +455,21 @@ def weather(lat: float = 13.0, lon: float = 80.2):
         return {'live': True, 'source': 'Open-Meteo', 'data': r.json().get('current', {})}
     except Exception as e:
         return {'live': False, 'message': 'Weather temporarily unavailable', 'detail': str(e)[:120]}
+
+@app.get('/sw.js')
+def handle_sw():
+    return Response(
+        content="self.addEventListener('install', () => self.skipWaiting()); self.addEventListener('activate', () => self.clients.claim());",
+        media_type='application/javascript'
+    )
+
+@app.get('/')
+def serve_index():
+    res = FileResponse(str(ROOT / 'frontend' / 'index.html'))
+    res.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    res.headers['Pragma'] = 'no-cache'
+    res.headers['Expires'] = '0'
+    return res
 
 # Mount frontend static files
 app.mount('/', StaticFiles(directory=str(ROOT / 'frontend'), html=True), name='frontend')
