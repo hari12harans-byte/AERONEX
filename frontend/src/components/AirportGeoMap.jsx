@@ -4,9 +4,9 @@ import { Layers, LocateFixed, Navigation, Maximize2, Building2, Train, Radio } f
 
 const TILE_PROVIDERS = {
   real: {
-    name: 'Carto Dark Aviation',
-    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-    attribution: '© OpenStreetMap contributors · © CARTO'
+    name: 'OpenStreetMap Geographic',
+    url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attribution: '© OpenStreetMap contributors'
   },
   satellite: {
     name: 'Satellite Aerial Imagery',

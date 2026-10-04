@@ -33,7 +33,7 @@ export function Privacy() {
       <h2>How we use it</h2>
       <p>To sign you in, show your journey, calculate connection risk and operate the service. We do not sell your data or use it for advertising.</p>
       <h2>Third-party services</h2>
-      <p>To show weather, aircraft, hotels and map tiles, your browser or our server contacts providers such as Open-Meteo, airplanes.live, OpenStreetMap and CARTO, and Google Fonts. These providers receive standard request data such as your IP address. When a flight-data provider key is configured, flight searches are sent to that provider.</p>
+      <p>To show weather, aircraft, hotels and map tiles, your browser or our server contacts providers such as Open-Meteo, airplanes.live, OpenStreetMap, and Google Fonts. These providers receive standard request data such as your IP address. When a flight-data provider key is configured, flight searches are sent to that provider.</p>
       <h2>Cookies and storage</h2>
       <p>We use one essential, HttpOnly session cookie. If you use the mobile app or a separate-domain version, a sign-in token is kept in your device storage instead. We do not use advertising cookies.</p>
       <h2>Retention and your choices</h2>

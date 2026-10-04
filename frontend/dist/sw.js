@@ -1,6 +1,6 @@
-// AeroNex service worker. muteo34v is replaced at build time, so every deploy gets a new cache name
+// AeroNex service worker. mutfnj1e is replaced at build time, so every deploy gets a new cache name
 // and the activate step deletes all older caches (no stale shell after an update).
-const CACHE = 'aeronex-shell-muteo34v';
+const CACHE = 'aeronex-shell-mutfnj1e';
 const SHELL = ['/', '/icon.svg', '/manifest.webmanifest'];
 
 self.addEventListener('install', (e) => {

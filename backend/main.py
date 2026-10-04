@@ -10,6 +10,7 @@ import joblib
 from backend.services.airport_resolver import resolver
 from backend.services.airport_twin_service import twin_service
 from backend.services.supabase_service import supabase_service
+from backend.services.airspace_service import airspace_service
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / 'data' / 'processed'
@@ -204,6 +205,7 @@ def health():
         'status': 'ok',
         'service': 'aeronex',
         'version': '1.0.0',
+        'airspace': airspace_service.get_provider_status(),
         'models': {
             'delay': DELAY_MODEL is not None,
             'cancellation': CANCEL_MODEL is not None,
@@ -793,53 +795,49 @@ def get_weather(airport: str = 'DEL', lat: Optional[float] = None, lon: Optional
 # Live Airspace ADS-B API
 @app.get('/api/live/aircraft')
 @app.get('/api/airspace')
-def get_live_aircraft(lat: float = 28.5562, lon: float = 77.1000, radius: float = 150):
-    if os.getenv('AIRPLANES_LIVE_ENABLED', '1').lower() not in ('1', 'true', 'yes'):
-        return {'status': 'OFFLINE', 'aircraft': [], 'source': 'Live airspace disabled by config'}
-    try:
-        url = f'https://api.airplanes.live/v2/point/{lat}/{lon}/{min(int(radius), 250)}'
-        res = requests.get(url, timeout=6)
-        res.raise_for_status()
-        data = res.json()
-        ac_list = []
-        for x in data.get('ac', [])[:150]:
-            callsign = (x.get('flight') or x.get('r') or '').strip()
-            if not callsign and not x.get('hex'):
-                continue
-            alt = x.get('alt_baro')
-            on_ground = bool(alt == 'ground' or (isinstance(alt, (int, float)) and alt <= 60))
-            alt_ft = 0 if on_ground else (int(alt) if isinstance(alt, (int, float)) else 0)
-            ac_list.append({
-                'hex': x.get('hex'),
-                'callsign': callsign or f'HEX-{x.get("hex")}',
-                'type': x.get('t') or 'A320',
-                'lat': float(x.get('lat', lat)),
-                'lon': float(x.get('lon', lon)),
-                'altFt': alt_ft,
-                'spdKt': int(x.get('gs', 0) or 0),
-                'track': float(x.get('track', 0) or 0),
-                'onGround': on_ground,
-                'registration': x.get('r')
-            })
-        return {
-            'status': 'LIVE',
-            'aircraft': ac_list,
-            'source': 'Airplanes.live ADS-B',
-            'timestamp': int(time.time())
+def get_live_aircraft(
+    lat: Optional[float] = None,
+    lon: Optional[float] = None,
+    radius: Optional[float] = None,
+    airport: Optional[str] = 'MAA',
+    force: Optional[int] = 0
+):
+    airport_code = (airport or 'MAA').strip().upper()
+    resolved_ap = resolver.resolve(airport_code)
+
+    target_lat = lat
+    target_lon = lon
+    airport_info = {
+        'iata': airport_code,
+        'name': f"{airport_code} Airport"
+    }
+
+    if resolved_ap:
+        airport_info = {
+            'iata': resolved_ap.get('iata', airport_code),
+            'name': resolved_ap.get('airport_name', resolved_ap.get('name', f"{airport_code} Airport")),
+            'city': resolved_ap.get('city', ''),
+            'country': resolved_ap.get('country', '')
         }
-    except Exception as e:
-        # Graceful synthetic radar scatter when live feed is temporarily unreachable
-        synthetic_ac = [
-            {'hex': '8001a1', 'callsign': 'AIC255', 'type': 'A321', 'lat': round(lat + 0.12, 4), 'lon': round(lon - 0.08, 4), 'altFt': 8400, 'spdKt': 280, 'track': 42.0, 'onGround': False},
-            {'hex': '8002b2', 'callsign': 'IGO621', 'type': 'A320', 'lat': round(lat - 0.18, 4), 'lon': round(lon + 0.15, 4), 'altFt': 14200, 'spdKt': 340, 'track': 220.0, 'onGround': False},
-            {'hex': '8003c3', 'callsign': 'AIC804', 'type': 'B788', 'lat': round(lat + 0.02, 4), 'lon': round(lon + 0.01, 4), 'altFt': 0, 'spdKt': 15, 'track': 95.0, 'onGround': True}
-        ]
-        return {
-            'status': 'LAST_KNOWN',
-            'aircraft': synthetic_ac,
-            'source': 'Airplanes.live ADS-B (Offline fallback)',
-            'message': str(e)[:80]
-        }
+        if target_lat is None or target_lon is None:
+            target_lat = float(resolved_ap.get('latitude', resolved_ap.get('lat', 13.0827)))
+            target_lon = float(resolved_ap.get('longitude', resolved_ap.get('lon', 80.2707)))
+
+    if target_lat is None:
+        target_lat = 13.0827
+    if target_lon is None:
+        target_lon = 80.2707
+
+    radius_nm = float(radius or int(os.getenv('AIRSPACE_RADIUS_NM', '50')))
+    force_refresh = bool(force and force > 0)
+
+    return airspace_service.get_airspace(
+        lat=target_lat,
+        lon=target_lon,
+        radius=radius_nm,
+        airport_info=airport_info,
+        force_refresh=force_refresh
+    )
 
 # Travel Assistant & Support
 @app.post('/api/assistant')

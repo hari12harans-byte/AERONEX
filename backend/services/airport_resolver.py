@@ -8,6 +8,11 @@ DATA = ROOT / 'data' / 'processed'
 
 # Curated aliases for Indian and international hub airports
 ALIASES: Dict[str, str] = {
+    'dubai': 'DXB',
+    'dxb': 'DXB',
+    'omdb': 'DXB',
+    'dubai airport': 'DXB',
+    'dubai international': 'DXB',
     'madras': 'MAA',
     'chennai': 'MAA',
     'vomm': 'MAA',
@@ -154,7 +159,7 @@ class AirportResolver:
                         'lighted_runways': int(r.get('lighted_runways', 1))
                     }
 
-        major_order = ['MAA', 'DEL', 'BOM', 'BLR', 'HYD', 'CCU', 'COK', 'AMD', 'PNQ', 'GOI', 'JAI', 'LKO', 'TRV', 'GAU']
+        major_order = ['MAA', 'DXB', 'DEL', 'BOM', 'BLR', 'HYD', 'CCU', 'COK', 'AMD', 'PNQ', 'GOI', 'JAI', 'LKO', 'TRV', 'GAU']
 
         for _, r in self.airports_df.iterrows():
             iata = str(r.get('iata_code', '')).strip().upper()
@@ -202,6 +207,50 @@ class AirportResolver:
                 self.by_city[city_key].append(item)
 
             self.all_airports.append(item)
+
+        # Ensure DXB and popular hub airports are registered
+        extra_hubs = [
+            {
+                'iata': 'DXB',
+                'icao': 'OMDB',
+                'airport_name': 'Dubai International Airport',
+                'name': 'Dubai International Airport',
+                'city': 'Dubai',
+                'country': 'United Arab Emirates',
+                'latitude': 25.2532,
+                'longitude': 55.3657,
+                'lat': 25.2532,
+                'lon': 55.3657,
+                'elevation_ft': 62.0,
+                'runways': {'runway_count': 2, 'max_runway_length_ft': 14764, 'lighted_runways': 2},
+                'is_major': True
+            },
+            {
+                'iata': 'SIN',
+                'icao': 'WSSS',
+                'airport_name': 'Singapore Changi Airport',
+                'name': 'Singapore Changi Airport',
+                'city': 'Singapore',
+                'country': 'Singapore',
+                'latitude': 1.3644,
+                'longitude': 103.9915,
+                'lat': 1.3644,
+                'lon': 103.9915,
+                'elevation_ft': 22.0,
+                'runways': {'runway_count': 3, 'max_runway_length_ft': 13123, 'lighted_runways': 3},
+                'is_major': True
+            }
+        ]
+        for hub in extra_hubs:
+            if hub['iata'] not in self.by_iata:
+                self.by_iata[hub['iata']] = hub
+                self.by_icao[hub['icao']] = hub
+                self.by_name[hub['name'].lower()] = hub
+                city_key = hub['city'].lower()
+                if city_key not in self.by_city:
+                    self.by_city[city_key] = []
+                self.by_city[city_key].append(hub)
+                self.all_airports.append(hub)
 
         # Sort all airports with major hubs first
         def sort_key(a):
