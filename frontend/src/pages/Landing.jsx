@@ -15,17 +15,24 @@ const FEATURES = [
 ];
 
 export default function Landing() {
-  const { user, loading } = useAuth();
+  const { user, loading, login } = useAuth();
   if (!loading && user) return <Navigate to="/dashboard" replace />;
+  const demoEnter = async () => {
+    try { await login('saravanan@aeronex.ai', 'demo123'); } catch (e) { console.error(e); }
+  };
   return (
     <div className="landing">
       <HeroScene />
-      <header className="land-top"><Logo /><div className="row gap"><Link className="btn ghost" to="/login">Log in</Link><Link className="btn primary" to="/register">Get Started</Link></div></header>
+      <header className="land-top"><Logo /><div className="row gap"><button type="button" className="btn ghost" onClick={demoEnter}>Demo Console</button><Link className="btn ghost" to="/login">Log in</Link><Link className="btn primary" to="/register">Get Started</Link></div></header>
       <section className="land-hero">
         <h1 className="hero-title">Aero<span>Nex</span></h1>
         <h2 className="hero-line">Your Next Connection,<br />Always On Time.</h2>
         <p className="hero-sub">An intelligent passenger journey and airport connection platform. Real-time flights. Smarter connections. Seamless journeys.</p>
-        <div className="row gap wrap"><Link className="btn primary lg" to="/register">Get Started <ArrowRight size={18} /></Link><Link className="btn ghost lg" to="/login">I already have an account</Link></div>
+        <div className="row gap wrap">
+          <button type="button" className="btn primary lg" onClick={demoEnter}>Launch Live Console <ArrowRight size={18} /></button>
+          <Link className="btn ghost lg" to="/register">Get Started</Link>
+          <Link className="btn ghost lg" to="/login">I already have an account</Link>
+        </div>
       </section>
       <section className="land-feats">
         {FEATURES.map(([I, t, d]) => <div className="card feat" key={t}><I size={26} className="blue" /><h3>{t}</h3><p className="muted">{d}</p></div>)}

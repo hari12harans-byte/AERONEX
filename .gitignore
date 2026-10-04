@@ -1,13 +1,47 @@
-node_modules/
-dist/
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Environment variables & secrets (CRITICAL: Do NOT commit .env)
 .env
-.env.*
-!.env.example
-backend/data/
-*.log
-.DS_Store
-ml/.venv/
+.env.local
+.env.*.local
+*.env
+
+# Node dependencies
+node_modules/
+frontend/node_modules/
+
+# Python cache & build
 __pycache__/
-*.pyc
-ml/data/raw/*
-!ml/data/raw/.gitkeep
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+build/
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+parts/
+var/
+sdist/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Operating System & IDE
+.DS_Store
+Thumbs.db
+Desktop.ini
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

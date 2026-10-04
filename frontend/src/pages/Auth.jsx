@@ -34,6 +34,13 @@ function AuthForm({ mode }) {
         <label className="field"><span>Password</span><input type="password" value={v.password} onChange={set('password')} required minLength={reg ? 8 : 1} autoComplete={reg ? 'new-password' : 'current-password'} /></label>
         {err && <p className="form-err" role="alert">{err}</p>}
         <button className="btn primary lg" disabled={busy}>{busy ? 'Please wait…' : reg ? 'Create account' : 'Log in'}</button>
+        <button type="button" className="btn ghost" disabled={busy} onClick={async () => {
+          setErr(''); setBusy(true);
+          try {
+            await login('saravanan@aeronex.ai', 'demo123');
+            nav(loc.state?.from || '/dashboard', { replace: true });
+          } catch (x) { setErr(x.message); } finally { setBusy(false); }
+        }}>Quick Demo Login (Captain Saravanan)</button>
         {reg && <p className="auth-legal">By creating an account you agree to the <Link to="/terms">Terms</Link> and <Link to="/privacy">Privacy Policy</Link>.</p>}
         <p className="muted center">{reg ? <>Already registered? <Link className="textlink" to="/login">Log in</Link></> : <>New to AeroNex? <Link className="textlink" to="/register">Create an account</Link></>}</p>
         <p className="auth-legal"><Link to="/privacy">Privacy</Link> · <Link to="/terms">Terms</Link></p>

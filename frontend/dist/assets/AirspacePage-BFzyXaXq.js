@@ -1,0 +1,1 @@
+import{u as e,j as a,P as r,A as i,k as t}from"./index-DtT8_kpZ.js";function n(){const s=e(()=>t("/trip"));return a.jsxs(a.Fragment,{children:[a.jsx(r,{title:"Live Airspace",sub:"Real ADS-B aircraft positions. Your trip route is drawn as a dashed line.",badge:"LIVE"}),a.jsx(i,{trip:s.data})]})}export{n as default};

@@ -8,5 +8,3 @@ services:
     envVars:
       - key: AIRPLANES_LIVE_ENABLED
         value: "1"
-      - key: OPEN_METEO_ENABLED
-        value: "1"

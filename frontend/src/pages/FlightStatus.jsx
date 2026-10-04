@@ -1,18 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Plane, AlertTriangle, CheckCircle2, Clock, MapPin, Sparkles, Building2, ArrowRight, ShieldCheck, RefreshCw } from 'lucide-react';
+import { Plane, Clock, MapPin, AlertCircle, ArrowRight, ShieldCheck, Activity, Cpu, Sparkles, AlertTriangle } from 'lucide-react';
 import { api } from '../api.js';
 import { useAsync } from '../hooks.js';
-import { Card, PageHeader, State, StatusPill, SourceBadge, fmtTime, fmtDate } from '../components/ui.jsx';
+import { Card, PageHeader, State, StatusPill, SourceBadge, fmtTime, fmtDate, RiskBadge } from '../components/ui.jsx';
 
 export default function FlightStatus() {
-  const [sp] = useSearchParams();
+  const [sp, setSp] = useSearchParams();
   const nav = useNavigate();
   const qs = sp.toString();
   const hasQuery = sp.get('flight') || sp.get('q') || (sp.get('from') && sp.get('to'));
   const [sel, setSel] = useState(0);
-  const [mlResult, setMlResult] = useState(null);
+
+  // ML Prediction state for selected flight
+  const [mlData, setMlData] = useState(null);
   const [mlLoading, setMlLoading] = useState(false);
+  const [mlErr, setMlErr] = useState('');
 
   const s = useAsync(async () => {
     if (!hasQuery) return { results: [], source: null, idle: true };
@@ -29,236 +32,252 @@ export default function FlightStatus() {
 
   useEffect(() => {
     setSel(0);
-    setMlResult(null);
+    setMlData(null);
   }, [qs]);
 
-  const runMlPrediction = async (flight) => {
+  const runFlightML = async (flight) => {
+    if (!flight) return;
     setMlLoading(true);
+    setMlErr('');
     try {
-      const depHour = flight.scheduledDeparture ? new Date(flight.scheduledDeparture).getHours() : 11;
-      const depMin = flight.scheduledDeparture ? new Date(flight.scheduledDeparture).getMinutes() : 35;
-      const res = await api('/flights/ml-predict', {
+      // 1. Predict delay and cancellation via ML-1 & ML-2
+      const mlFlight = await api('/predict/flight', {
         method: 'POST',
         body: {
-          airline: flight.airline,
+          airline: flight.airline || 'Air India',
           origin: flight.origin,
           destination: flight.destination,
-          distance_km: flight.distanceKm || 1760,
-          hour_of_day: depHour,
-          minute_of_hour: depMin,
-        },
+          scheduled_departure: flight.scheduledDeparture ? flight.scheduledDeparture.slice(11, 16) : '12:00',
+          scheduled_arrival: flight.scheduledArrival ? flight.scheduledArrival.slice(11, 16) : '14:30',
+          day_of_week: 2,
+          month: 10
+        }
       });
-      setMlResult(res);
-    } catch (e) {
-      console.warn('ML Prediction failed:', e);
+
+      // 2. Predict connection feasibility via ML-3
+      const mlConn = await api('/predict/connection', {
+        method: 'POST',
+        body: {
+          inbound_delay_minutes: mlFlight.delay_minutes || 0,
+          remaining_connection_minutes: 90,
+          mct_minutes: 55,
+          boarding_minutes_remaining: 60,
+          gate_distance_m: 450,
+          security_minutes: 12,
+          terminal_change: 0
+        }
+      });
+
+      setMlData({
+        delay: mlFlight,
+        connection: mlConn
+      });
+    } catch (err) {
+      setMlErr(err.message || 'Failed to compute ML prediction');
     } finally {
       setMlLoading(false);
     }
   };
 
-  const results = s.data?.results || [];
-  const recognizedAirport = s.data?.recognizedAirport;
-  const queryText = sp.get('q') || sp.get('flight') || (sp.get('from') && `${sp.get('from')} → ${sp.get('to')}`) || '';
-
   return (
     <>
       <PageHeader
-        title="Flight Status & Operations"
-        sub="Search flights across Indian and international airspace with real-time, historical, and ML operational telemetry."
-        badge={s.data?.source || 'OPERATIONS'}
+        title="Flight Status & Aviation Intelligence"
+        sub="Comprehensive flight lookup across airlines, hubs, routes and trained ML disruption models."
+        badge={s.data?.source || 'HISTORICAL'}
       />
 
       <State
         s={s}
         isEmpty={(d) => !d.results || !d.results.length}
         empty={
-          <div className="empty-results-box">
-            <Plane size={48} className="empty-icon text-muted" aria-hidden="true" />
-            <h3>{queryText ? `No flights found for "${queryText}"` : 'Enter a flight or airport search above'}</h3>
+          <div className="card empty-search-card">
+            <AlertCircle size={32} className="amber" />
+            <h3>No flights found for "{sp.get('q') || sp.get('flight') || `${sp.get('from')} → ${sp.get('to')}`}"</h3>
 
-            {recognizedAirport && (
-              <div className="recognized-airport-badge">
-                <span className="badge-tag">Airport Recognized</span>
-                <b>{recognizedAirport.name}</b>
-                <span className="codes">IATA: {recognizedAirport.iata} · ICAO: {recognizedAirport.icao} · City: {recognizedAirport.city}</span>
+            {s.data?.airportRecognized && (
+              <div className="recognized-box">
+                <span className="rec-badge">AIRPORT RECOGNIZED</span>
+                <p>
+                  <b>{s.data.airportRecognized.name}</b> · {s.data.airportRecognized.city} ({s.data.airportRecognized.iata} / {s.data.airportRecognized.icao})
+                </p>
               </div>
             )}
 
             <div className="search-suggestions">
-              <span className="suggestions-title">Try searching:</span>
-              <div className="pills-row">
-                <button className="pill-btn" onClick={() => nav('/flight-status?q=MAA')}>MAA (Chennai)</button>
-                <button className="pill-btn" onClick={() => nav('/flight-status?q=DEL')}>DEL (Delhi)</button>
-                <button className="pill-btn" onClick={() => nav('/flight-status?q=AI255')}>AI 255</button>
-                <button className="pill-btn" onClick={() => nav('/flight-status?q=6E5312')}>6E 5312</button>
-                <button className="pill-btn" onClick={() => nav('/flight-status?from=MAA&to=DEL')}>MAA → DEL</button>
-              </div>
+              <p><b>Suggestions:</b></p>
+              <ul className="bul">
+                <li>Search by IATA/ICAO code (e.g. <b>MAA</b>, <b>VOMM</b>, <b>DEL</b>, <b>BOM</b>)</li>
+                <li>Search by flight number (e.g. <b>AI 255</b>, <b>6E 502</b>)</li>
+                <li>Search by airline (e.g. <b>Air India</b>, <b>IndiGo</b>)</li>
+                <li>Check another date or popular Indian route (e.g. <b>MAA → DEL</b>)</li>
+              </ul>
             </div>
-            {s.data?.note && <p className="muted small mt-sm">{s.data.note}</p>}
+
+            <p className="notice" style={{ marginTop: 14 }}>
+              <b>LIVE DATA STATUS:</b> {s.data?.live_status || 'LIVE DATA TEMPORARILY UNAVAILABLE (using local operational schedules and historical records).'}
+            </p>
           </div>
         }
       >
         {(d) => {
-          const f = d.results[sel] || d.results[0];
+          const results = d.results || [];
+          const f = results[sel] || results[0];
+
           return (
-            <div className="split wide">
-              {/* Flight List Column */}
+            <div className="split">
+              {/* Flight Results List */}
               <div className="stack flight-results-list">
-                <div className="results-header-count">
-                  <b>{d.results.length} Flight{d.results.length === 1 ? '' : 's'} Found</b>
-                  <SourceBadge kind={d.source || 'HISTORICAL'} />
-                </div>
-                {d.results.map((r, i) => (
+                {results.map((r, i) => (
                   <button
-                    key={`${r.flightNumber}-${r.scheduledDeparture}-${i}`}
-                    className={`flight-card-mini ${i === sel ? 'active-card' : ''}`}
+                    key={r.flightNumber + r.scheduledDeparture + i}
+                    className={`result ${i === sel ? 'on' : ''}`}
                     onClick={() => {
                       setSel(i);
-                      setMlResult(null);
+                      setMlData(null);
                     }}
                   >
-                    <div className="mini-row top">
-                      <div className="airline-block">
-                        <b>{r.flightNumber}</b>
-                        <small>{r.airline}</small>
-                      </div>
-                      <StatusPill status={r.status} />
+                    <div>
+                      <b>{r.flightNumber}</b>
+                      <small>{r.airline}</small>
                     </div>
-                    <div className="mini-row middle">
-                      <span className="route-iata">{r.origin}</span>
-                      <span className="route-arrow">───►</span>
-                      <span className="route-iata">{r.destination}</span>
+                    <div>
+                      <b>{r.origin} → {r.destination}</b>
                     </div>
-                    <div className="mini-row bottom">
-                      <small>{fmtTime(r.scheduledDeparture)} – {fmtTime(r.scheduledArrival)}</small>
-                      <SourceBadge kind={r.source} />
+                    <div>
+                      <small>{fmtTime(r.estimatedDeparture)} – {fmtTime(r.estimatedArrival)}</small>
                     </div>
+                    <StatusPill status={r.status} />
                   </button>
                 ))}
               </div>
 
-              {/* Selected Flight Command Card */}
-              <div className="flight-command-card card">
-                {/* Header */}
-                <div className="flight-header-bar">
-                  <div className="airline-title-group">
-                    <h2>{f.flightNumber}</h2>
-                    <span className="airline-name-sub">{f.airline}</span>
-                  </div>
-                  <div className="status-badges-group">
-                    <SourceBadge kind={f.source} />
-                    <StatusPill status={f.status} />
-                  </div>
-                </div>
-
-                {/* Main Visual Route Banner */}
-                <div className="flight-route-hero">
-                  <div className="route-node origin">
-                    <span className="city-label">{f.originCity || f.origin}</span>
-                    <span className="iata-code">{f.origin}</span>
-                    <span className="flight-time">{fmtTime(f.scheduledDeparture)}</span>
-                    <span className="terminal-gate">Terminal {f.terminal || 'T1'} · Gate {f.gate || 'A07'}</span>
-                  </div>
-
-                  <div className="route-path-visual">
-                    <Plane size={24} className="flight-path-plane" aria-hidden="true" />
-                    <div className="path-line"></div>
-                    <span className="distance-badge">{f.distanceKm ? `${f.distanceKm} km` : '1,760 km'}</span>
-                  </div>
-
-                  <div className="route-node destination">
-                    <span className="city-label">{f.destCity || f.destination}</span>
-                    <span className="iata-code">{f.destination}</span>
-                    <span className="flight-time">{fmtTime(f.scheduledArrival)}</span>
-                    <span className="terminal-gate">Terminal {f.arrivalTerminal || 'T3'} · Gate {f.arrivalGate || 'B06'}</span>
-                  </div>
-                </div>
-
-                {/* Operations Data Grid */}
-                <div className="ops-data-grid">
-                  <div className="ops-item">
-                    <span className="ops-label">Departure</span>
-                    <b className="ops-value">{fmtTime(f.estimatedDeparture)}</b>
-                    <small className="ops-sub">Sched: {fmtTime(f.scheduledDeparture)}</small>
-                  </div>
-                  <div className="ops-item">
-                    <span className="ops-label">Arrival</span>
-                    <b className="ops-value">{fmtTime(f.estimatedArrival)}</b>
-                    <small className="ops-sub">Sched: {fmtTime(f.scheduledArrival)}</small>
-                  </div>
-                  <div className="ops-item">
-                    <span className="ops-label">Operational Status</span>
-                    <b className={`ops-value ${f.status.includes('DELAYED') ? 'text-amber' : f.status.includes('CANCEL') ? 'text-bad' : 'text-ok'}`}>
-                      {f.status}
-                    </b>
-                    <small className="ops-sub">{f.delayMinutes ? `+${f.delayMinutes} min delay` : 'On schedule'}</small>
-                  </div>
-                  <div className="ops-item">
-                    <span className="ops-label">Data Telemetry</span>
-                    <b className="ops-value">{f.source}</b>
-                    <small className="ops-sub">{f.source === 'LIVE' ? 'AviationStack ADS-B' : 'AeroNex Verified DB'}</small>
-                  </div>
-                </div>
-
-                {/* ML Operational Intelligence Banner */}
-                <div className="ml-ops-panel">
-                  <div className="ml-ops-header">
-                    <div className="row gap">
-                      <Sparkles size={20} className="text-cyan" />
-                      <div>
-                        <b>AeroNex Machine Learning Telemetry</b>
-                        <small className="d-block text-muted">XGBoost Delay Regressor + Severe Delay / Cancellation Classifier</small>
-                      </div>
+              {/* Detailed Professional Aviation Card (Requirement 7) */}
+              <div className="stack flight-details-col">
+                <div className="card aviation-flight-card">
+                  {/* Card Header */}
+                  <div className="card-top-row">
+                    <div>
+                      <h2 className="flight-num-lg">{f.flightNumber}</h2>
+                      <p className="muted">{f.airline}</p>
                     </div>
-                    {!mlResult && (
-                      <button
-                        className="btn primary sm"
-                        onClick={() => runMlPrediction(f)}
-                        disabled={mlLoading}
-                      >
-                        {mlLoading ? 'Computing ML...' : 'Run ML Forecast'}
-                      </button>
-                    )}
+                    <div className="row gap" style={{ alignItems: 'center' }}>
+                      <SourceBadge kind={f.source || 'HISTORICAL'} />
+                      <StatusPill status={f.status} />
+                    </div>
                   </div>
 
-                  {mlResult && mlResult.available && (
-                    <div className="ml-result-grid mt-sm">
-                      <div className="ml-tile">
-                        <span className="ml-tile-label">XGBoost Predicted Delay</span>
-                        <b className="ml-tile-value">{mlResult.predicted_delay_min} min</b>
-                        <small className="text-muted">Model: {mlResult.models_used?.delay || 'aeronex_delay_xgb'}</small>
+                  {/* Route Visualizer */}
+                  <div className="route-visualizer">
+                    <div className="route-point">
+                      <span className="route-code">{f.origin}</span>
+                      <span className="route-city">{f.originCity || f.origin}</span>
+                      <b className="route-time">{fmtTime(f.scheduledDeparture)}</b>
+                      <span className="route-term">{f.departureTerminal || 'Terminal 1'}</span>
+                    </div>
+
+                    <div className="route-path-graphic">
+                      <span className="dash-line" />
+                      <Plane size={24} className="flight-plane-icon" />
+                      <span className="dash-line" />
+                    </div>
+
+                    <div className="route-point right">
+                      <span className="route-code">{f.destination}</span>
+                      <span className="route-city">{f.destinationCity || f.destination}</span>
+                      <b className="route-time">{fmtTime(f.scheduledArrival)}</b>
+                      <span className="route-term">{f.arrivalTerminal || 'Terminal 3'}</span>
+                    </div>
+                  </div>
+
+                  {/* Operations Grid */}
+                  <div className="flight-ops-grid">
+                    <div className="op-box">
+                      <small>Departure</small>
+                      <b>{fmtTime(f.estimatedDeparture)}</b>
+                    </div>
+                    <div className="op-box">
+                      <small>Arrival</small>
+                      <b>{fmtTime(f.estimatedArrival)}</b>
+                    </div>
+                    <div className="op-box">
+                      <small>Gate</small>
+                      <b>Gate {f.gate || '14'}</b>
+                    </div>
+                    <div className="op-box">
+                      <small>Terminal</small>
+                      <b>{f.departureTerminal || 'T1'}</b>
+                    </div>
+                    <div className="op-box">
+                      <small>Status</small>
+                      <b className="blue">{f.status}</b>
+                    </div>
+                    <div className="op-box">
+                      <small>Data Source</small>
+                      <b>{f.source || 'HISTORICAL'}</b>
+                    </div>
+                  </div>
+
+                  {/* ML Intelligence Trigger Button */}
+                  <div className="row gap wrap" style={{ marginTop: 18, borderTop: '1px solid var(--line)', paddingTop: 16 }}>
+                    <button
+                      className="btn primary"
+                      disabled={mlLoading}
+                      onClick={() => runFlightML(f)}
+                    >
+                      <Cpu size={16} /> {mlLoading ? 'Evaluating ML Models…' : 'Run ML Delay & Connection Assessment'}
+                    </button>
+                    <button
+                      className="btn ghost"
+                      onClick={() => nav(`/airport-twin?airport=${f.destination}`)}
+                    >
+                      <MapPin size={16} /> View {f.destination} Digital Twin
+                    </button>
+                  </div>
+
+                  {mlErr && <p className="form-err">{mlErr}</p>}
+
+                  {/* ML Results Panel (Requirement 8) */}
+                  {mlData && (
+                    <div className="ml-assessment-panel">
+                      <div className="ml-assessment-header">
+                        <Sparkles size={18} className="blue" />
+                        <b>AeroNex Machine Learning Decision Engine</b>
+                        <span className="badge demo">XGBOOST ML PIPELINE</span>
                       </div>
-                      <div className="ml-tile">
-                        <span className="ml-tile-label">Cancellation Probability</span>
-                        <b className={`ml-tile-value ${mlResult.cancellation_probability > 0.5 ? 'text-bad' : 'text-ok'}`}>
-                          {(mlResult.cancellation_probability * 100).toFixed(1)}%
-                        </b>
-                        <small className="text-muted">Risk Category: {mlResult.cancellation_risk}</small>
+
+                      <div className="ml-metrics-grid">
+                        <div className="ml-metric-card">
+                          <small>ML-1 XGBoost Delay Regressor</small>
+                          <b className="val">+{mlData.delay.delay_minutes} min</b>
+                          <p className="muted small">Predicted arrival delay based on route priors and airport congestion.</p>
+                        </div>
+
+                        <div className="ml-metric-card">
+                          <small>ML-2 XGBoost Cancellation Classifier</small>
+                          <b className="val">{mlData.delay.cancellation_probability}%</b>
+                          <p className="muted small">Operational cancellation risk probability.</p>
+                        </div>
+
+                        <div className="ml-metric-card">
+                          <small>ML-3 Connection Feasibility Proxy</small>
+                          <div className="row gap" style={{ alignItems: 'center', marginTop: 4 }}>
+                            <b className="val">{mlData.connection.catch_probability}%</b>
+                            <RiskBadge risk={mlData.connection.risk_band === 'SAFE' ? 'LOW' : mlData.connection.risk_band === 'WATCH' ? 'MEDIUM' : 'HIGH'} />
+                          </div>
+                          <p className="muted small">Feasibility buffer: {mlData.connection.buffer_minutes} min ({mlData.connection.risk_band}).</p>
+                        </div>
+                      </div>
+
+                      <div className="ml-recommendation-box">
+                        <AlertTriangle size={17} className="amber" />
+                        <div>
+                          <b>Recommended Operational Action:</b>
+                          <p>{mlData.connection.recommendation}</p>
+                        </div>
                       </div>
                     </div>
                   )}
-                </div>
-
-                {/* Quick Actions */}
-                <div className="card-actions-bar">
-                  <button
-                    className="btn ghost"
-                    onClick={() => nav(`/airport-twin?airport=${f.origin}`)}
-                  >
-                    <Building2 size={17} /> Digital Twin ({f.origin})
-                  </button>
-                  <button
-                    className="btn ghost"
-                    onClick={() => nav(`/airport-twin?airport=${f.destination}`)}
-                  >
-                    <Building2 size={17} /> Digital Twin ({f.destination})
-                  </button>
-                  <button
-                    className="btn primary"
-                    onClick={() => nav(`/trip`)}
-                  >
-                    <ShieldCheck size={17} /> Connection Guardian <ArrowRight size={16} />
-                  </button>
                 </div>
               </div>
             </div>

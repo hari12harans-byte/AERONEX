@@ -9,7 +9,7 @@ const TABS = [
   ['search', 'Flight Search', Plane],
   ['trips', 'My Trips', Briefcase],
   ['airport', 'Airport Info', MapPin],
-  ['air', 'Live Airspace', Globe2],
+  ['air', 'Live Airspace', Globe2]
 ];
 
 const todayISO = () => new Date(Date.now() + 5.5 * 3600e3).toISOString().slice(0, 10);
@@ -26,112 +26,93 @@ export default function FlightSearch({ compactAircraft }) {
   const submit = (e) => {
     e.preventDefault();
     const query = f.no.trim();
-    const noClean = query.replace(/\s+/g, '').toUpperCase();
+    setErr('');
 
-    // If user provided a query in the main flight search field
+    // If query is provided, user can search by flight number, airline, or airport name/code
     if (query) {
-      setErr('');
       const p = new URLSearchParams();
-      // If it looks like a flight number (e.g. AI 255, 6E 5312)
-      if (/^[A-Z0-9]{2}\s*\d{1,4}[A-Z]?$/i.test(query)) {
-        p.set('flight', noClean);
-      } else {
-        p.set('q', query);
-      }
-      if (f.date) p.set('date', f.date);
+      p.set('q', query);
+      p.set('date', f.date);
       nav(`/flight-status?${p}`);
       return;
     }
 
-    // Otherwise search using From/To pair
     if (!f.from || !f.to || f.from === f.to) {
-      return setErr('Enter a flight number/airport, or choose two different route airports');
+      return setErr('Please choose two different airports, or enter a flight number / airport name.');
     }
-    setErr('');
+
     const p = new URLSearchParams({ from: f.from, to: f.to, date: f.date });
     nav(`/flight-status?${p}`);
   };
 
   return (
     <div className="search-panel card">
-      <div className="tabs" role="tablist" aria-label="Flight search tabs">
+      <div className="tabs" role="tablist">
         {TABS.map(([k, label, Icon]) => (
           <button
             key={k}
             role="tab"
             aria-selected={tab === k}
-            className={`tab-btn ${tab === k ? 'on' : ''}`}
+            className={tab === k ? 'on' : ''}
             onClick={() => setTab(k)}
           >
-            <Icon size={18} aria-hidden="true" />
-            <span>{label}</span>
+            <Icon size={17} /> {label}
           </button>
         ))}
       </div>
 
       {tab === 'search' && (
-        <form className="flight-search-form" onSubmit={submit}>
-          {/* Row 1: Full-width Flight Number Input (Spans both columns) */}
-          <div className="form-field full-width">
-            <label htmlFor="flight-no-input">Flight Number / Airport / Route</label>
-            <div className="input-with-icon wide-input-wrap">
-              <Search size={20} className="field-icon" aria-hidden="true" />
-              <input
-                id="flight-no-input"
-                className="flight-number-input"
-                value={f.no}
-                onChange={set('no')}
-                placeholder="e.g. AI 255, Chennai, MAA, or VOMM"
-                maxLength={40}
-                autoComplete="off"
-              />
-            </div>
-            <span className="field-hint">Supports flight number (AI 255), airport name (Chennai), IATA (MAA), or ICAO (VOMM)</span>
-          </div>
+        <form className="sform" onSubmit={submit}>
+          {/* ROW 1: Wide Horizontal Flight Number Field Spanning 100% of Card */}
+          <label className="field field-full">
+            <span>Flight Number / Route / Airport</span>
+            <input
+              value={f.no}
+              onChange={set('no')}
+              placeholder="e.g. AI 255 (or airline, city e.g. Chennai, VOMM, Delhi)"
+              maxLength={40}
+              autoComplete="off"
+            />
+          </label>
 
-          {/* Row 2: Two-column From and To selectors */}
-          <div className="form-field half-width">
-            <label htmlFor="origin-select">From</label>
-            <select id="origin-select" value={f.from} onChange={set('from')}>
-              {airports.length === 0 && <option value={f.from}>{f.from} - Chennai</option>}
+          {/* ROW 2: From & To */}
+          <label className="field">
+            <span>From</span>
+            <select value={f.from} onChange={set('from')}>
+              {airports.length === 0 && <option>{f.from}</option>}
               {airports.map((a) => (
                 <option key={a.iata} value={a.iata}>
-                  {a.iata} - {a.city} ({a.name})
+                  {a.iata} - {a.city} ({a.icao || a.iata})
                 </option>
               ))}
             </select>
-          </div>
+          </label>
 
-          <div className="form-field half-width">
-            <label htmlFor="destination-select">To</label>
-            <select id="destination-select" value={f.to} onChange={set('to')}>
-              {airports.length === 0 && <option value={f.to}>{f.to} - Delhi</option>}
+          <label className="field">
+            <span>To</span>
+            <select value={f.to} onChange={set('to')}>
+              {airports.length === 0 && <option>{f.to}</option>}
               {airports.map((a) => (
                 <option key={a.iata} value={a.iata}>
-                  {a.iata} - {a.city} ({a.name})
+                  {a.iata} - {a.city} ({a.icao || a.iata})
                 </option>
               ))}
             </select>
-          </div>
+          </label>
 
-          {/* Row 3: Travel Date and Search Flight Button */}
-          <div className="form-field half-width">
-            <label htmlFor="date-input">Travel Date</label>
+          {/* ROW 3: Travel Date & Search Button */}
+          <label className="field">
+            <span>Travel Date</span>
             <div className="datebox">
-              <Calendar size={18} aria-hidden="true" />
-              <input
-                id="date-input"
-                type="date"
-                value={f.date}
-                onChange={set('date')}
-                required
-              />
+              <Calendar size={17} />
+              <input type="date" value={f.date} onChange={set('date')} required />
             </div>
-          </div>
+          </label>
 
-          <div className="form-field half-width btn-align">
-            <button className="btn primary lg search-submit-btn" type="submit">
-              Search Flight <ArrowRight size={18} aria-hidden="true" />
+          <div className="field btn-field">
+            <span className="btn-label-placeholder">&nbsp;</span>
+            <button className="btn primary btn-search" type="submit">
+              Search Flight <ArrowRight size={18} />
             </button>
           </div>
 
@@ -143,28 +124,27 @@ export default function FlightSearch({ compactAircraft }) {
 
       {tab === 'airport' && (
         <div className="tabbody">
-          <div className="airport-quick-search">
+          <div className="sform two" style={{ marginBottom: 16 }}>
             <label className="field">
-              <span>Select Airport</span>
+              <span>Airport</span>
               <select value={info} onChange={(e) => setInfo(e.target.value)}>
                 {airports.map((a) => (
                   <option key={a.iata} value={a.iata}>
-                    {a.iata} - {a.city} ({a.name})
+                    {a.iata} - {a.city} ({a.icao || a.iata})
                   </option>
                 ))}
               </select>
             </label>
-            <p className="airport-full-title">
-              <b>{airports.find((a) => a.iata === info)?.name || 'Chennai International Airport'}</b>
-              <small> · IATA: {info} · ICAO: {airports.find((a) => a.iata === info)?.icao || 'VOMM'}</small>
+            <p className="muted" style={{ alignSelf: 'center', margin: 0 }}>
+              {airports.find((a) => a.iata === info)?.name || 'Loading airport…'}
             </p>
           </div>
-          <div className="row gap wrap mt-md">
+          <div className="row gap wrap">
             {[
-              ['/airport-twin', 'Airport Digital Twin'],
-              ['/weather', 'Weather Station'],
+              ['/airport-twin', 'Digital Twin'],
+              ['/weather', 'Weather'],
               ['/transport', 'Ground Transport'],
-              ['/hotels', 'Nearby Hotels'],
+              ['/hotels', 'Hotels']
             ].map(([to, l]) => (
               <button key={to} className="btn ghost" onClick={() => nav(`${to}?airport=${info}`)}>
                 {l}
@@ -176,16 +156,13 @@ export default function FlightSearch({ compactAircraft }) {
 
       {tab === 'air' && (
         <div className="tabbody row gap between wrap">
-          <div>
-            <b>Live Airspace Surveillance</b>
-            <p className="muted">
-              {compactAircraft != null
-                ? `${compactAircraft} active aircraft tracked in regional airspace.`
-                : 'Surveillance of active commercial traffic via ADS-B telemetry.'}
-            </p>
-          </div>
+          <p className="muted">
+            {compactAircraft != null
+              ? `${compactAircraft} aircraft currently in view on the Live Airspace radar.`
+              : 'See real ADS-B traffic around the active hub airport.'}
+          </p>
           <button className="btn primary" onClick={() => nav('/airspace')}>
-            Open Live Airspace Radar <ArrowRight size={17} />
+            Open Live Airspace <ArrowRight size={17} />
           </button>
         </div>
       )}
@@ -204,9 +181,7 @@ function TripsTab({ nav }) {
               {t.legs.map((l) => (
                 <div key={l.flightNumber} className="mini-leg">
                   <b>{l.flightNumber}</b> {l.origin} → {l.destination}{' '}
-                  <small>
-                    {fmtTime(l.estimatedDeparture)}–{fmtTime(l.estimatedArrival)}
-                  </small>{' '}
+                  <small>{fmtTime(l.estimatedDeparture)}–{fmtTime(l.estimatedArrival)}</small>{' '}
                   <StatusPill status={l.status} />
                 </div>
               ))}

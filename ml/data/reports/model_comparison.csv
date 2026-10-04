@@ -1,5 +1,0 @@
-stage,model,split,selected,n,prevalence,threshold,precision,recall,f1,accuracy,roc_auc,pr_auc,brier,cm_tn,cm_fp,cm_fn,cm_tp
-connection,logistic_regression,validation,True,97451,0.08650501277565135,0.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0021092040930161355,89021,0,0,8430
-connection,random_forest,validation,False,97451,0.08650501277565135,0.5,1.0,1.0,1.0,1.0,1.0,1.0,2.4245575101859333e-07,89021,0,0,8430
-connection,hist_gradient_boosting,validation,False,97451,0.08650501277565135,0.5,1.0,1.0,1.0,1.0,1.0,1.0,4.796902642724164e-10,89021,0,0,8430
-connection,rule_baseline_buffer_lt_0,validation,False,97451,0.08650501277565135,0.5,1.0,1.0,1.0,1.0,1.0,1.0,0.0,89021,0,0,8430

@@ -14,7 +14,6 @@ function aeronexBuild(siteUrl) {
     configResolved(c) { outDir = path.resolve(c.root, c.build.outDir); },
     transformIndexHtml: (html) => html.replaceAll('__SITE_URL__', siteUrl),
     closeBundle() {
-      fs.mkdirSync(outDir, { recursive: true });
       const sw = path.join(outDir, 'sw.js');
       if (fs.existsSync(sw)) fs.writeFileSync(sw, fs.readFileSync(sw, 'utf8').replaceAll('__BUILD_ID__', buildId));
       fs.writeFileSync(path.join(outDir, 'robots.txt'), ['User-agent: *', 'Allow: /', 'Disallow: /api/', siteUrl ? `Sitemap: ${siteUrl}/sitemap.xml` : '', ''].filter((l, i, a) => l || i === a.length - 1).join('\n'));
@@ -29,7 +28,7 @@ function aeronexBuild(siteUrl) {
 export default defineConfig(({ mode }) => {
   // Reads frontend/.env and the project-root .env (where the backend values live). REFRESH_SECONDS is accepted as an alias.
   const env = { ...loadEnv(mode, path.resolve(process.cwd(), '..'), ['VITE_', 'REFRESH_', 'API_BASE_']), ...loadEnv(mode, process.cwd(), ['VITE_', 'REFRESH_']) };
-  const apiTarget = (env.VITE_PROXY_TARGET || env.API_BASE_URL || 'http://localhost:4000').replace(/\/$/, '');
+  const apiTarget = (env.VITE_PROXY_TARGET || env.API_BASE_URL || 'http://127.0.0.1:8000').replace(/\/$/, '');
   // VITE_SITE_URL, e.g. https://aeronex.example.com (no trailing slash). Needed for absolute social-preview URLs.
   const siteUrl = (env.VITE_SITE_URL || '').replace(/\/$/, '');
   return {
