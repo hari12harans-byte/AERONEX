@@ -1,26 +1,28 @@
-@echo off
+﻿@echo off
 title AeroNex System Launcher
 echo ========================================================
 echo               AeroNex System Launcher
 echo ========================================================
 cd /d "%~dp0"
 
-echo [1/3] Launching ML Service on http://127.0.0.1:5000 ...
-start "AeroNex - ML Service" cmd /k "cd /d "%~dp0ml" && python -m uvicorn src.api:app --host 127.0.0.1 --port 5000"
-timeout /t 2 /nobreak >nul
+echo Checking if AeroNex server is already running on port 8000...
+netstat -ano | findstr :8000 | findstr LISTENING >nul
+if %errorlevel% equ 0 (
+    echo [OK] AeroNex server is already running on http://localhost:8000
+) else (
+    echo [1/2] Launching AeroNex Unified Server (API + ML + Frontend)...
+    start "AeroNex - Unified Server" cmd /k "cd /d "%~dp0" && python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000 --reload"
+    timeout /t 3 /nobreak >nul
+)
 
-echo [2/3] Launching Backend API on http://localhost:8000 ...
-start "AeroNex - Backend" cmd /k "cd /d "%~dp0backend" && npm start"
-timeout /t 2 /nobreak >nul
-
-echo [3/3] Launching Frontend on http://localhost:5173 ...
-start "AeroNex - Frontend" cmd /k "cd /d "%~dp0frontend" && npm run dev"
+echo [2/2] Opening AeroNex Web App in default browser...
+start http://localhost:8000
 
 echo.
 echo ========================================================
-echo All AeroNex services are starting!
-echo - Frontend: http://localhost:5173
-echo - Backend:  http://localhost:8000
-echo - ML API:   http://127.0.0.1:5000
+echo  AeroNex is running successfully!
+echo  - Web Application: http://localhost:8000
+echo  - API Docs:        http://localhost:8000/docs
+echo  - Health Check:    http://localhost:8000/api/health
 echo ========================================================
 pause
