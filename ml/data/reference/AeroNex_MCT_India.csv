@@ -1,0 +1,2 @@
+airport_iata,airport_name,domestic_domestic_minutes,domestic_international_minutes,international_domestic_minutes,international_international_minutes,interline_minutes,source,retrieved_date
+MAA,Chennai International Airport,60,90,90,120,120,MinimumConnectionTime.com (user-supplied JSON),2026-10-04

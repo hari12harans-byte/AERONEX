@@ -1,0 +1,55 @@
+# AeroNex dataset registry config. Nothing here is a verified dataset ID.
+# Entries with dataset_id: CONFIGURE_ME are SKIPPED and reported as "not configured".
+# Run `python scripts/discover_hf.py` (needs internet) to list candidate Hugging Face datasets,
+# then review them and fill docs/DATASET_SELECTION_REPORT.md before enabling any.
+datasets:
+
+  aeronex_indian_combined:
+    enabled: true
+    source: local
+    path: ml/data/raw/AeroNex_Indian_Combined.csv
+    adapter: indian_schedule_csv   # timetable rows only; fare rows ignored; NO delays in this file
+    sample_days_per_month: 7       # timetable is expanded onto days 1-7 of each month (documented sampling choice)
+    provenance:
+      source_name: UNKNOWN (supplied by project owner; original publisher not recorded)
+      source_url: UNKNOWN
+      license: UNKNOWN
+      official: false
+
+  indian_schedule:
+    enabled: true
+    source: huggingface          # huggingface | local
+    dataset_id: CONFIGURE_ME
+    config_name: null
+    split: train
+    revision: null               # pin a commit sha for reproducibility
+    data_files: null             # optional: file(s) inside the repo (csv/json/parquet/arrow)
+    format: null                 # csv | json | parquet | arrow  (only needed with data_files)
+    adapter: schedule            # schedule | csv | json | xlsx | dgca | huggingface
+    provenance:
+      source_name: CONFIGURE_ME
+      source_url: CONFIGURE_ME
+      license: CONFIGURE_ME
+      official: false            # a Hugging Face upload is NOT assumed to be official data
+
+  indian_delay:
+    enabled: true
+    source: local
+    path: ml/data/raw/indian_delay.csv      # flight-level observed delays (actual vs scheduled)
+    adapter: csv
+    provenance:
+      source_name: CONFIGURE_ME
+      source_url: CONFIGURE_ME
+      license: CONFIGURE_ME
+      official: false
+
+  dgca:
+    enabled: true
+    source: local
+    path: ml/data/raw/dgca.csv              # DGCA monthly OTP exports are usually AGGREGATES, not flights
+    adapter: dgca
+    provenance:
+      source_name: DGCA / Ministry of Civil Aviation
+      source_url: CONFIGURE_ME
+      license: CONFIGURE_ME
+      official: true             # set true only if the file really came from the DGCA site

@@ -1,0 +1,6 @@
+{
+  "appId": "com.aeronex.app",
+  "appName": "AeroNex",
+  "webDir": "dist",
+  "server": { "androidScheme": "https" }
+}

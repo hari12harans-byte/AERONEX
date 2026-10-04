@@ -1,0 +1,23 @@
+{
+  "datasets": [
+    {
+      "name": "aeronex_indian_combined",
+      "source_name": "UNKNOWN (supplied by project owner; original publisher not recorded)",
+      "source_url": "UNKNOWN",
+      "dataset_id": "AeroNex_Indian_Combined.csv",
+      "license": "UNKNOWN",
+      "retrieved_at": "2026-10-03T12:18:30.767715+00:00",
+      "dataset_version": "UNKNOWN",
+      "record_count": 977587,
+      "description": "Indian timetable (schedule) rows expanded onto sample days; no observed delays",
+      "limitations": [
+        "schedule-only: no observed arrival delay in this source (arrival_delay_min is empty)",
+        "timetable rows expanded onto sample days only: {'rows_in_file': 120273, 'schedule_rows': 109935, 'fare_rows_ignored': 10338, 'schedule_rows_usable': 33706, 'next_day_arrivals': 707, 'dated_flights_generated': 977587, 'sample_days_per_month': 7}",
+        "fare_observation rows ignored (no flight number / time; cannot be linked to schedule rows)",
+        "unmapped canonical columns: ['arrival_delay_min']"
+      ],
+      "kind": "flights",
+      "official_source": false
+    }
+  ]
+}
