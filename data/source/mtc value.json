@@ -1,0 +1,94 @@
+{
+  "@context": "https://schema.org",
+  "@type": "Airport",
+  "address": {
+    "@type": "PostalAddress",
+    "addressCountry": "India",
+    "addressLocality": "Chennai"
+  },
+  "airlines": [
+    "IndiGo",
+    "Air India"
+  ],
+  "amenityFeature": [
+    {
+      "@type": "LocationFeatureSpecification",
+      "name": "Domestic to Domestic Connection Time",
+      "value": "60 minutes"
+    },
+    {
+      "@type": "LocationFeatureSpecification",
+      "name": "Domestic to International Connection Time",
+      "value": "90 minutes"
+    },
+    {
+      "@type": "LocationFeatureSpecification",
+      "name": "International to Domestic Connection Time",
+      "value": "90 minutes"
+    },
+    {
+      "@type": "LocationFeatureSpecification",
+      "name": "International to International Connection Time",
+      "value": "120 minutes"
+    },
+    {
+      "@type": "LocationFeatureSpecification",
+      "name": "Interline Connection Time",
+      "value": "120 minutes"
+    }
+  ],
+  "city": "Chennai",
+  "code": "MAA",
+  "connection_tips": "Connecting through Chennai International Airport (MAA) has become significantly more streamlined with the opening of the new integrated Terminal 2 (Anna) for international flights. For international arrivals connecting to a domestic destination, you must clear immigration, collect all checked baggage, and pass through customs in Terminal 2 before walking to Terminal 1 or 4 to re-check your bags. The journey to central hubs like T. Nagar or the Chennai Central Railway Station takes about 30 to 40 minutes and costs approximately \u20b940 to \u20b960. Arriving at the airport two hours before domestic flights and three hours for international departures is standard practice.\n\nThe airport currently operates three main terminals: Terminal 1 (Domestic), Terminal 2 (International), and Terminal 4 (Domestic). A minimum connection time of at least three hours is recommended for these transfers to account for immigration processing and terminal transit. Domestic passengers flying from Terminal 1 or 4 should take advantage of 'DigiYatra,' a biometric facial recognition system that allows for paperless entry and faster security clearance; ensure you register on the app before arrival. Official prepaid taxis and ride-sharing apps like Uber and Ola are also available, with dedicated pickup zones in the parking area.\n\nAll terminals are linked by an internal walkway corridor, so there is no need to take a taxi for terminal changes. Ground transportation to the Chennai city center, located 15 kilometers away, is best handled by the Chennai Metro Blue Line, which has a station directly connected to the terminal complex via a covered walkway. For international visitors, please note that free Wi-Fi often requires an Indian mobile number for OTP authentication; if you lack one, visit the information desk for assistance.",
+  "country": "India",
+  "flag_url": "https://flagcdn.com/w320/in.png",
+  "flight_search_affiliate_link": "https://book.beatthatflight.com.au/?currency=INR",
+  "frequent_traveler_tip": [
+    "Tamil Nadu's busiest airport with 22+ million passengers annually.",
+    "Loyalty members can access the mezzanine lounge near gate 5 to recharge and sample South Indian.",
+    "Check your flight status before leaving for the airport.",
+    "Allow extra time during peak travel periods at this airport.",
+    "Keep important documents easily accessible at this airport."
+  ],
+  "global_map_link": "https://www.google.com/maps?q=Chennai%20International%20Airport%20Chennai",
+  "google_maps_reviews": {
+    "rating": 0.0,
+    "recent_reviews": [],
+    "total_reviews": 0
+  },
+  "has_commercial_service": true,
+  "hotel_affiliate_link": "https://book.beatthatflight.com.au/?currency=INR",
+  "iataCode": "MAA",
+  "icao": "VOMM",
+  "international": true,
+  "last_modified": "September 2026",
+  "last_updated": "2026-03-30",
+  "latitude": 12.9941,
+  "layover_planner_info": "Chennai International Airport (MAA) in Chennai, India is a international airport for Asia, with IndiGo and Air India serving the route pattern. Chennai International Airport (MAA) serves as a primary gateway to Southern India, with two main terminals catering to domestic and international traffic. Plan around 60 minutes domestic, 90 minutes domestic-to-international, 120 minutes international-to-international, and 120 minutes interline. Nearby alternatives for schedule recovery include AGR Agra Airport / Agra Air Force Station, PNY Pondicherry Airport, and TIR Tirupati Airport.",
+  "longitude": 80.1709,
+  "mct_domestic_to_domestic": 60,
+  "mct_domestic_to_international": 90,
+  "mct_interline": 120,
+  "mct_international_to_domestic": 90,
+  "mct_international_to_international": 120,
+  "missed_connection_help": "If you miss a connection at Chennai International Airport (MAA) in Chennai, India, contact IndiGo and Air India or the handling desk immediately. This airport functions as a regional feeder, so the best recovery option is usually the next departure from Chennai or a nearby airport. Connecting through Chennai International Airport (MAA) has become significantly more streamlined with the opening of the new integrated Terminal 2 (Anna) for international flights. Backup routing may also use AGR Agra Airport / Agra Air Force Station, PNY Pondicherry Airport, and TIR Tirupati Airport.",
+  "name": "Chennai International Airport",
+  "noindex": false,
+  "region": "Asia",
+  "related_airports": [
+    {
+      "code": "AGR",
+      "name": "Agra Airport / Agra Air Force Station"
+    },
+    {
+      "code": "PNY",
+      "name": "Pondicherry Airport"
+    },
+    {
+      "code": "TIR",
+      "name": "Tirupati Airport"
+    }
+  ],
+  "terminal_info": "Chennai International Airport (MAA) serves as a primary gateway to Southern India, with two main terminals catering to domestic and international traffic. The Kamaraj Domestic Terminal (T1) and the Anna International Terminal (T2/T3) are interconnected, allowing for easy transfers. The airport's design reflects a blend of modern architecture and traditional Indian aesthetics, providing a unique and welcoming atmosphere for travelers. The terminals are equipped with a range of facilities, including lounges, duty-free shops, and a variety of dining options, offering a taste of both local and international cuisine.\n\nThe airport is a major hub for several Indian airlines, including IndiGo, Air India, and SpiceJet, and it handles a significant volume of both passenger and cargo traffic. The airport offers numerous non-stop flights to major cities across India and to international destinations in Asia, Europe, and the Middle East. The airport's strategic location and extensive flight network make it a key connecting point for travelers in the region.\n\nGetting to and from the airport is convenient, with various transportation options available. The airport is well-connected to the city by the Chennai Metro, suburban trains, and a network of buses. Taxis and ride-sharing services are also readily available. The airport's commitment to providing a seamless travel experience is evident in its efficient operations, modern infrastructure, and a wide range of passenger services.",
+  "terminal_map_url": "https://en.wikipedia.org/wiki/Chennai_International_Airport"
+}

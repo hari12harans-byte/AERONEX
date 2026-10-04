@@ -32,71 +32,71 @@
 ## 🏗️ Architecture
 
 ```
-AERONEX SYSTEM
+AERONEX UNIFIED DEPLOYMENT (RENDER / LOCAL)
    │
-   ├── Frontend (Vite + React 18 + Leaflet) ── Port 5173
-   │     ├── Leaflet + OpenStreetMap Basemap
+   ├── Frontend (Static Leaflet + OpenStreetMap + Space-Age Dark Theme)
+   │     ├── Leaflet + OpenStreetMap Basemap (Zero CARTO dependency)
    │     ├── Airport Digital Twin & Terminal Blueprints
-   │     ├── Live Airspace Radar View
+   │     ├── Live Airspace Radar View (Airplanes.live)
    │     ├── Flight Search & Journey Status
    │     └── Gate-to-Gate Transfer Calculator
    │
-   ├── Backend API (Node.js + Express) ──────── Port 8000
-   │     ├── Geospatial Airport Resolver & Nearest Airport Engine
-   │     ├── Flight Normalization & Reference Fallbacks
-   │     ├── Connection Risk & Buffer Evaluation
-   │     └── ML Client Forwarding & Health Diagnostics
-   │
-   └── ML Service (FastAPI + Uvicorn) ────────── Port 5000
-         ├── XGBoost Flight Delay Regressor (`aeronex_delay_xgb.joblib`)
-         ├── XGBoost Flight Cancellation Classifier (`aeronex_cancellation_xgb.joblib`)
-         └── Calibrated Connection Risk Model (`aeronex_connection_model.joblib`)
+   └── Backend & ML Engine (FastAPI + Uvicorn + XGBoost) ── Port $PORT / 8000
+         ├── Pre-trained XGBoost Models (`models/aeronex_*_xgb.joblib`)
+         │     ├── Delay Prediction Pipeline (`aeronex_delay_xgb.joblib`)
+         │     ├── Cancellation Prediction Pipeline (`aeronex_cancellation_xgb.joblib`)
+         │     └── Connection Feasibility Proxy Pipeline (`aeronex_connection_xgb_proxy.joblib`)
+         ├── Geospatial Airport Resolver & Nearest Airport Engine (MAA, BOM, DEL, etc.)
+         ├── Flight Normalization & Reference Fallbacks (Schedule + Historical)
+         ├── Minimum Connect Time (MCT) Engine & Connection Guardian Risk Scoring
+         ├── Open-Meteo Weather Integration
+         ├── Optional Supabase Runtime Persistence Integration
+         └── Static Single-Page App Hosting (`/`, `/app.js`, `/styles.css`)
 ```
 
 ---
 
-## 🚀 Quick Start
+## ☁️ Render Deployment (Production)
+
+This repository is configured for direct deployment on **Render** as a Python Web Service.
+
+| Setting | Value |
+| :--- | :--- |
+| **Root Directory** | *(Leave empty - repo root)* |
+| **Runtime** | `Python` (or `Docker` using included `Dockerfile`) |
+| **Build Command** | `pip install -r requirements.txt` |
+| **Start Command** | `uvicorn backend.main:app --host 0.0.0.0 --port $PORT` |
+| **Health Check Path** | `/api/health` |
+| **Auto-Deploy** | Yes (triggers on pushes to `main`) |
+
+### Environment Variables
+Configure these in the Render Dashboard (optional overrides):
+* `AIRPLANES_LIVE_ENABLED=1`
+* `OPEN_METEO_ENABLED=1`
+* `SUPABASE_URL=` *(optional)*
+* `SUPABASE_ANON_KEY=` *(optional)*
+* `SUPABASE_SERVICE_ROLE_KEY=` *(optional, backend-only)*
+
+---
+
+## 🚀 Local Quick Start
 
 ### 1. Prerequisites
-* **Node.js**: v18.17 or higher
-* **Python**: v3.10 or higher
+* **Python**: v3.10, 3.11, or 3.12
 
-### 2. Automated Single-Click Launch (Windows)
-Double-click `run_all.bat` in the project root to start all three services in separate terminals:
-```cmd
-run_all.bat
-```
-
-### 3. Manual Startup
-
-#### Step A: Configure Environment
-Copy the example configuration to `.env`:
+### 2. Setup & Run
 ```bash
-cp .env.example .env
-```
+# Clone the repository
+git clone https://github.com/hari12harans-byte/AeroNex.git
+cd AeroNex
 
-#### Step B: Launch ML Service
-```bash
-cd ml
+# Install dependencies
 pip install -r requirements.txt
-python -m uvicorn src.api:app --host 127.0.0.1 --port 5000
-```
 
-#### Step C: Launch Backend API
-```bash
-cd backend
-npm install
-npm start
+# Run the unified server
+uvicorn backend.main:app --host 0.0.0.0 --port 8000
 ```
-*Backend runs on `http://localhost:8000`.*
-
-#### Step D: Launch Frontend UI
-```bash
-cd frontend
-npm install
-npm run dev
-```
-*Frontend runs on `http://localhost:5173` with Vite HMR and automatic API proxying.*
+Open [http://localhost:8000](http://localhost:8000) in your browser. All API endpoints and frontend features are live!
 
 ---
 
